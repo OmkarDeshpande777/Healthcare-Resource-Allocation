@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demand Forecast - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🏥 Hospital RMS</h2>
+                <p>Resource Management System</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+                <div class="user-details">
+                    <strong>{{ session.username|default('User') }}</strong>
+                    <span>{{ session.role|default('Staff') }}</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li class="active"><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>7-Day Demand Forecast</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                    <button class="btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <!-- Forecast Summary -->
+            <div class="metrics-grid">
+                <div class="metric-card blue">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-content">
+                        <h3>{{ predicted_admissions }}</h3>
+                        <p>Expected Admissions (7 Days)</p>
+                        <span class="metric-change">Confidence: 87%</span>
+                    </div>
+                </div>
+                <div class="metric-card green">
+                    <div class="metric-icon">🛏️</div>
+                    <div class="metric-content">
+                        <h3>{{ peak_occupancy }}%</h3>
+                        <p>Peak Occupancy</p>
+                        <span class="metric-change">Day {{ peak_day }}</span>
+                    </div>
+                </div>
+                <div class="metric-card gray">
+                    <div class="metric-icon">⚠️</div>
+                    <div class="metric-content">
+                        <h3>{{ critical_resources }}</h3>
+                        <p>Critical Resources</p>
+                        <span class="metric-change">May need reorder</span>
+                    </div>
+                </div>
+                <div class="metric-card purple">
+                    <div class="metric-icon">📈</div>
+                    <div class="metric-content">
+                        <h3>{{ growth_trend }}</h3>
+                        <p>Demand Trend</p>
+                        <span class="metric-change">Next 7 days</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Forecast Chart -->
+            <div class="section">
+                <h2>Admission Forecast (Next 7 Days)</h2>
+                <canvas id="forecastChart" height="80"></canvas>
+            </div>
+            
+            <!-- Department-wise Forecast -->
+            <div class="section">
+                <h2>Department-wise Demand Forecast</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Current Occupancy</th>
+                            <th>Predicted Day 3</th>
+                            <th>Predicted Day 7</th>
+                            <th>Resource Needed</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept, forecast in department_forecast.items() %}
+                        <tr>
+                            <td><strong>{{ dept }}</strong></td>
+                            <td>{{ forecast.current }}%</td>
+                            <td>{{ forecast.day3 }}%</td>
+                            <td>{{ forecast.day7 }}%</td>
+                            <td>
+                                {% if forecast.day7 >= 90 %}
+                                    <span class="badge badge-danger">Critical</span>
+                                {% elif forecast.day7 >= 75 %}
+                                    <span class="badge badge-warning">High</span>
+                                {% else %}
+                                    <span class="badge badge-success">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ forecast.confidence }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Resource Recommendations -->
+            <div class="section">
+                <h2>💡 Resource Allocation Recommendations</h2>
+                <div class="alerts-list">
+                    {% for rec in resource_recommendations %}
+                    <div class="alert-item alert-info">
+                        <div class="alert-icon">{{ rec.icon }}</div>
+                        <div class="alert-content">
+                            <p><strong>{{ rec.resource }}</strong></p>
+                            <p style="margin-top: 5px; font-size: 14px;">{{ rec.recommendation }}</p>
+                            <span class="alert-time">Target: {{ rec.target_quantity }}</span>
+                        </div>
+                        <div>
+                            <span class="badge badge-info">{{ rec.priority }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Hourly Distribution -->
+            <div class="section">
+                <h2>Peak Hours Analysis</h2>
+                <canvas id="hoursChart" height="60"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update datetime
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Always use backend sample data for visualization
+        window.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    datasets: [
+                        {
+                            label: 'Predicted Admissions (Sample)',
+                            data: {{ forecast_data|tojson }},
+                            borderColor: '#0078d7',
+                            backgroundColor: 'rgba(0,120,215,0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#0078d7',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'ML-Based Demand Forecast (Next 7 Days)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Admissions'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const hoursCtx = document.getElementById('hoursChart').getContext('2d');
+            new Chart(hoursCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
+                    datasets: [{
+                        label: 'Expected Admissions',
+                        data: {{ hourly_distribution|tojson }},
+                        backgroundColor: '#28a745'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

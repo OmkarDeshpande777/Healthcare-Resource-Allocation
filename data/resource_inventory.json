@@ -1,0 +1,65 @@
+{
+  "icu_beds": {
+    "total": 25,
+    "available": 30,
+    "allocated": 20,
+    "maintenance": 0,
+    "cost_per_day": 8000
+  },
+  "general_beds": {
+    "total": 268,
+    "available": 120,
+    "allocated": 80,
+    "maintenance": 0,
+    "cost_per_day": 1500
+  },
+  "emergency_beds": {
+    "total": 30,
+    "available": 15,
+    "allocated": 15,
+    "maintenance": 0,
+    "cost_per_day": 3000
+  },
+  "oxygen_cylinders": {
+    "total": 75,
+    "available": 65,
+    "allocated": 35,
+    "maintenance": 0,
+    "cost_per_unit": 450
+  },
+  "ppe_kits": {
+    "total": 400,
+    "available": 350,
+    "allocated": 150,
+    "maintenance": 0,
+    "cost_per_unit": 800
+  },
+  "ventilators": {
+    "total": 30,
+    "available": 18,
+    "allocated": 12,
+    "maintenance": 0,
+    "cost_per_day": 15000
+  },
+  "n95_masks": {
+    "total": 1000,
+    "available": 750,
+    "allocated": 250,
+    "maintenance": 0,
+    "cost_per_unit": 45
+  },
+  "surgical_gloves": {
+    "total": 2000,
+    "available": 1500,
+    "allocated": 500,
+    "maintenance": 0,
+    "cost_per_unit": 12
+  },
+  "hand_sanitizers": {
+    "total": 500,
+    "available": 300,
+    "allocated": 200,
+    "maintenance": 0,
+    "cost_per_unit": 180
+  }
+}

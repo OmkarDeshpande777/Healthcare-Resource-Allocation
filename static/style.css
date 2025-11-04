@@ -1,0 +1,171 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f2f7fb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+h1 {
+  text-align: center;
+  color: #0078d7;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: #0078d7;
+  margin-top: 20px;
+}
+
+h3 {
+  color: #333;
+  margin-top: 15px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+input, select {
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+select {
+  cursor: pointer;
+  background-color: white;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+p {
+  font-size: 1.1em;
+  color: #333;
+  margin: 10px 0;
+}
+
+a {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #0078d7;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+a:hover {
+  background-color: #005fa3;
+}
+
+.highlight {
+  color: #0078d7;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.result-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.resources-section {
+  background: #e7f3ff;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.resources-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.resources-section li {
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.resources-section li:last-child {
+  border-bottom: none;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.actions a {
+  margin: 5px;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.severity-critical {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.severity-high {
+  color: #fd7e14;
+  font-weight: bold;
+}
+
+.severity-moderate {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.severity-low {
+  color: #28a745;
+  font-weight: bold;
+}
+

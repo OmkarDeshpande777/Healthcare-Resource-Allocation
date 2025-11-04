@@ -1,0 +1,32 @@
+{
+  "doctors": {
+    "total": 50,
+    "on_duty": 35,
+    "off_duty": 15,
+    "avg_salary": 150000
+  },
+  "staff_nurses": {
+    "total": 150,
+    "on_duty": 100,
+    "off_duty": 50,
+    "avg_salary": 45000
+  },
+  "lab_technicians": {
+    "total": 40,
+    "on_duty": 25,
+    "off_duty": 15,
+    "avg_salary": 35000
+  },
+  "admin_staff": {
+    "total": 30,
+    "on_duty": 20,
+    "off_duty": 10,
+    "avg_salary": 30000
+  },
+  "ayush_practitioners": {
+    "total": 10,
+    "on_duty": 6,
+    "off_duty": 4,
+    "avg_salary": 80000
+  }
+}

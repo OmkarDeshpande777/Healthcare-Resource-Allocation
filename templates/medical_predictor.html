@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Condition Predictor - Hospital RMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+    <style>
+        .predictor-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .prediction-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 16px 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .form-group label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #005a9e;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 4px;
+                            <span class="input-detail">Admission Type: <span id="displayAdmissionType"></span></span>
+                            <span class="input-detail">Medication: <span id="displayMedication"></span></span>
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0078d7;
+            box-shadow: 0 0 0 2px #e3f2fd;
+        /* Input summary styling for new fields */
+        .input-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .input-detail {
+            display: inline-block;
+            margin-right: 18px;
+            font-size: 15px;
+            color: #333;
+        }
+        #displayAdmissionType, #displayMedication {
+            font-weight: 600;
+            color: #0078d7;
+        }
+        /* Highlight new fields in results */
+        #displayAdmissionType {
+            background: #e3f2fd;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        #displayMedication {
+            background: #fff3e0;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #0078d7 0%, #005a9e 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,120,215,0.3);
+        }
+
+        .predict-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .primary-result {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 6px solid;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            font-size: 48px;
+        }
+
+        .result-info h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #333;
+        }
+
+        .result-info .confidence {
+            font-size: 18px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .description {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .recommendations {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .recommendations h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendation-item::before {
+            content: "✓";
+            background: #28a745;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .probability-chart {
+            margin-top: 30px;
+        }
+
+        .probability-chart h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .probability-item {
+            margin-bottom: 15px;
+        }
+
+        .probability-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .probability-bar {
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0078d7, #005a9e);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0078d7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .input-summary {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .input-summary h4 {
+            margin-top: 0;
+            color: #0078d7;
+        }
+
+        .input-detail {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: 600;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🏥 Hospital RMS</h2>
+                <p>Resource Management System</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.user[0].upper() if session.user else 'U' }}</div>
+                <div class="user-details">
+                    <strong>{{ session.user|default('User') }}</strong>
+                    <span>{{ session.role|default('Staff') }}</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li class="active"><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Medical Condition Predictor</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                </div>
+            </div>
+
+            <div class="predictor-container">
+                <div class="page-header">
+                    <h1>🔬 AI-Powered Medical Condition Prediction</h1>
+                    <p>Enter patient information to predict potential medical conditions using machine learning</p>
+                </div>
+
+                <div class="prediction-card">
+                    <h2 style="margin-top: 0; color: #333;">Patient Information</h2>
+                    
+                    <div class="error-message" id="errorMessage"></div>
+
+                    <form id="predictionForm">
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="age">Age *</label>
+                                <input type="number" id="age" name="age" min="0" max="120" required 
+                                       placeholder="Enter age (0-120)">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="gender">Gender *</label>
+                                <select id="gender" name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="blood_type">Blood Type *</label>
+                                <select id="blood_type" name="blood_type" required>
+                                    <option value="">Select Blood Type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admission_type">Admission Type *</label>
+                                <select id="admission_type" name="admission_type" required>
+                                    <option value="Elective">Elective</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="Urgent">Urgent</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="medication">Medication:</label>
+                                <input type="text" id="medication" name="medication" placeholder="Enter medication (optional)">
+                            </div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="predict-btn" id="predictBtn">
+                                🔍 Predict Medical Condition
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Analyzing patient data with AI...</p>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section">
+                    <div class="prediction-card">
+                        <div class="input-summary">
+                            <h4>📋 Patient Details</h4>
+                            <span class="input-detail">Age: <span id="displayAge"></span></span>
+                            <span class="input-detail">Gender: <span id="displayGender"></span></span>
+                            <span class="input-detail">Blood Type: <span id="displayBloodType"></span></span>
+                            <span class="input-detail">Admission Type: <span id="displayAdmissionType"></span></span>
+                            <span class="input-detail">Medication: <span id="displayMedication"></span></span>
+                        </div>
+
+                        <div class="primary-result" id="primaryResult">
+                            <div class="result-header">
+                                <div class="result-icon" id="resultIcon">🔴</div>
+                                <div class="result-info">
+                                    <h2 id="resultCondition">Cancer</h2>
+                                    <p class="confidence">Confidence: <strong id="resultConfidence">95.5%</strong></p>
+                                    <span class="severity-badge" id="severityBadge">Critical</span>
+                                </div>
+                            </div>
+                            <p class="description" id="resultDescription">Requires immediate attention and specialized care</p>
+
+                            <div class="recommendations">
+                                <h3>📌 Recommended Actions</h3>
+                                <div id="recommendationsList"></div>
+                            </div>
+                        </div>
+
+                        <div class="probability-chart">
+                            <h3>📊 All Possible Conditions (Probability Distribution)</h3>
+                            <div id="probabilityChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update datetime
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const blood_type = document.getElementById('blood_type').value;
+            const admission_type = document.getElementById('admission_type').value;
+            const medication = document.getElementById('medication').value;
+
+            // Hide error and results
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('resultsSection').style.display = 'none';
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('predictBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/predict-condition', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        age: parseFloat(age),
+                        gender: gender,
+                        blood_type: blood_type,
+                        admission_type: admission_type,
+                        medication: medication
+                    })
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    showError(result.error || 'Prediction failed');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+                showError('Network error. Please try again.');
+                console.error('Error:', error);
+            }
+        });
+
+        function displayResults(result) {
+            const prediction = result.prediction;
+            const inputData = result.input_data;
+
+            // Display input summary
+            document.getElementById('displayAge').textContent = inputData.age;
+            document.getElementById('displayGender').textContent = inputData.gender;
+            document.getElementById('displayBloodType').textContent = inputData.blood_type;
+            document.getElementById('displayAdmissionType').textContent = inputData.admission_type;
+            document.getElementById('displayMedication').textContent = inputData.medication;
+
+            // Display primary result
+            document.getElementById('resultIcon').textContent = prediction.icon;
+            document.getElementById('resultCondition').textContent = prediction.condition;
+            document.getElementById('resultConfidence').textContent = prediction.confidence + '%';
+            document.getElementById('resultDescription').textContent = prediction.description;
+            document.getElementById('severityBadge').textContent = prediction.severity;
+            document.getElementById('severityBadge').style.background = prediction.color;
+            document.getElementById('severityBadge').style.color = 'white';
+
+            // Set border color
+            document.getElementById('primaryResult').style.borderLeftColor = prediction.color;
+
+            // Display recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            prediction.recommendations.forEach(rec => {
+                const item = document.createElement('div');
+                item.className = 'recommendation-item';
+                item.textContent = rec;
+                recommendationsList.appendChild(item);
+            });
+
+            // Display probability chart
+            const probabilityChart = document.getElementById('probabilityChart');
+            probabilityChart.innerHTML = '';
+            result.all_predictions.forEach(pred => {
+                const item = document.createElement('div');
+                item.className = 'probability-item';
+                item.innerHTML = `
+                    <div class="probability-header">
+                        <span><strong>${pred.condition}</strong></span>
+                        <span>${pred.probability}%</span>
+                    </div>
+                    <div class="probability-bar">
+                        <div class="probability-fill" style="width: ${pred.probability}%">
+                            ${pred.probability > 10 ? pred.probability + '%' : ''}
+                        </div>
+                    </div>
+                `;
+                probabilityChart.appendChild(item);
+            });
+
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>

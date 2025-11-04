@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 420px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .user-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .user-option {
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .user-option:hover {
+            border-color: #0078d7;
+            background-color: #f8f9fa;
+        }
+        
+        .user-option.selected {
+            border-color: #0078d7;
+            background-color: rgba(0,120,215,0.1);
+        }
+        
+        .user-option-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .user-option-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+        
+        .user-option-desc {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #6c757d;
+            font-size: 13px;
+        }
+        
+        .demo-users {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .demo-users h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .demo-users ul {
+            list-style: none;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .demo-users li {
+            margin-bottom: 5px;
+        }
+        
+        .demo-users strong {
+            color: #0078d7;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🏥 Hospital Resource Management</h1>
+                <p>Smart Resource Allocation System</p>
+            </div>
+            
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" 
+                           placeholder="Enter username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="Enter password" required>
+                </div>
+                
+                <div class="divider">Or select a role</div>
+                
+                <div class="user-select">
+                    <div class="user-option" data-username="admin" data-password="admin123">
+                        <div class="user-option-icon">👨‍💼</div>
+                        <div class="user-option-title">Administrator</div>
+                        <div class="user-option-desc">Full access</div>
+                    </div>
+                    <div class="user-option" data-username="dr_smith" data-password="doctor123">
+                        <div class="user-option-icon">👨‍⚕️</div>
+                        <div class="user-option-title">Doctor</div>
+                        <div class="user-option-desc">Medical staff</div>
+                    </div>
+                    <div class="user-option" data-username="nurse_joy" data-password="nurse123">
+                        <div class="user-option-icon">👩‍⚕️</div>
+                        <div class="user-option-title">Nurse</div>
+                        <div class="user-option-desc">Nursing staff</div>
+                    </div>
+                    <div class="user-option" data-username="staff_mike" data-password="staff123">
+                        <div class="user-option-icon">👨‍💻</div>
+                        <div class="user-option-title">Staff</div>
+                        <div class="user-option-desc">Support staff</div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary btn-login">Login</button>
+            </form>
+            
+            <div class="demo-users">
+                <h3>Demo Credentials:</h3>
+                <ul>
+                    <li><strong>admin</strong> / admin123 - Full access</li>
+                    <li><strong>dr_smith</strong> / doctor123 - Doctor access</li>
+                    <li><strong>nurse_joy</strong> / nurse123 - Nurse access</li>
+                    <li><strong>staff_mike</strong> / staff123 - Staff access</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle user role selection
+        document.querySelectorAll('.user-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all
+                document.querySelectorAll('.user-option').forEach(opt => 
+                    opt.classList.remove('selected'));
+                
+                // Add to clicked
+                this.classList.add('selected');
+                
+                // Fill in credentials
+                document.getElementById('username').value = this.dataset.username;
+                document.getElementById('password').value = this.dataset.password;
+            });
+        });
+    </script>
+</body>
+</html>

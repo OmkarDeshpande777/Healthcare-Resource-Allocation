@@ -1,0 +1,45 @@
+<h2>Admission Forecast (Next 7 Days)</h2>
+<table border="1">
+    <tr>
+        <th>Date</th>
+        <th>Day</th>
+        <th>Predicted Admissions</th>
+        <th>Occupancy Level</th>
+        <th>Bed Status</th>
+        <th>Admission Types</th>
+        <th>Condition Distribution</th>
+        <th>Alerts</th>
+        <th>Recommended Actions</th>
+    </tr>
+    {% for day in forecast_data %}
+    <tr {% if day.occupancy_level == 'High' %}style="background:#ffe5e5"{% endif %}>
+        <td>{{ day.date }}</td>
+        <td>{{ day.day_name }}</td>
+        <td><b>{{ day.predicted_admissions }}</b></td>
+        <td>{{ day.occupancy_level }}</td>
+        <td>{{ day.bed_status }}</td>
+        <td>
+            {% for typ, val in day.admission_types.items() %}
+                <div>{{ typ }}: {{ val }}</div>
+            {% endfor %}
+        </td>
+        <td>
+            {% for cond, val in day.conditions.items() %}
+                <div>{{ cond }}: {{ val }}</div>
+            {% endfor %}
+        </td>
+        <td>
+            {% for alert in day.alerts %}
+                <div>{{ alert }}</div>
+            {% endfor %}
+        </td>
+        <td>
+            <ul>
+            {% for act in day.recommended_actions %}
+                <li>{{ act }}</li>
+            {% endfor %}
+            </ul>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

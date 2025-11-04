@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Data Entry - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🏥 Hospital RMS</h2>
+                <p>Resource Management System</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+                <div class="user-details">
+                    <strong>{{ session.username|default('User') }}</strong>
+                    <span>{{ session.role|default('Staff') }}</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li class="active"><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Smart Patient Data Entry</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Patient Registration Form</h2>
+                
+                <form id="patientForm" onsubmit="return handleSubmit(event)">
+                    <div class="metrics-grid">
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h3>Basic Information</h3>
+                            
+                            <div class="form-group">
+                                <label for="name">Patient Name *</label>
+                                <input type="text" id="name" name="name" class="form-control" 
+                                       placeholder="Enter full name" required>
+                                <span class="validation-msg" id="name-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="age">Age *</label>
+                                <input type="number" id="age" name="age" class="form-control" 
+                                       placeholder="Enter age" min="0" max="120" required>
+                                <span class="validation-msg" id="age-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="gender">Gender *</label>
+                                <select id="gender" name="gender" class="form-control" required>
+                                    <option value="">Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <span class="validation-msg" id="gender-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="blood_type">Blood Type *</label>
+                                <select id="blood_type" name="blood_type" class="form-control" required>
+                                    <option value="">Select blood type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                                <span class="validation-msg" id="blood_type-validation"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Medical Information -->
+                        <div class="form-section">
+                            <h3>Medical Information</h3>
+                            
+                            <div class="form-group">
+                                <label for="medical_condition">Medical Condition *</label>
+                                <input type="text" id="medical_condition" name="medical_condition" 
+                                       class="form-control" placeholder="E.g., Diabetes, Hypertension" required>
+                                <span class="validation-msg" id="medical_condition-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="admission_type">Admission Type *</label>
+                                <select id="admission_type" name="admission_type" class="form-control" required>
+                                    <option value="">Select admission type</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="Urgent">Urgent</option>
+                                    <option value="Elective">Elective</option>
+                                </select>
+                                <span class="validation-msg" id="admission_type-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="department">Preferred Department *</label>
+                                <select id="department" name="department" class="form-control" required>
+                                    <option value="">Select department</option>
+                                    <option value="ICU">ICU</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="General Ward">General Ward</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Maternity">Maternity</option>
+                                </select>
+                                <span class="validation-msg" id="department-validation"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="symptoms">Symptoms</label>
+                                <textarea id="symptoms" name="symptoms" class="form-control" rows="3" 
+                                          placeholder="Describe symptoms..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h3>Additional Information</h3>
+                            
+                            <div class="form-group">
+                                <label for="doctor">Attending Doctor</label>
+                                <input type="text" id="doctor" name="doctor" class="form-control" 
+                                       placeholder="Doctor name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="insurance_provider">Insurance Provider</label>
+                                <input type="text" id="insurance_provider" name="insurance_provider" 
+                                       class="form-control" placeholder="Insurance company">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="billing_amount">Estimated Billing Amount</label>
+                                <input type="number" id="billing_amount" name="billing_amount" 
+                                       class="form-control" placeholder="Amount in USD" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="comorbidities">Comorbidities</label>
+                                <textarea id="comorbidities" name="comorbidities" class="form-control" rows="3" 
+                                          placeholder="List any existing conditions..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="validation-summary" style="display: none;" class="alert"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" onclick="validateForm()" class="btn-secondary">
+                            Validate Form
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            Submit Patient Data
+                        </button>
+                        <button type="reset" class="btn-secondary">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Recent Submissions -->
+            <div class="section">
+                <h2>Recent Submissions</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Condition</th>
+                            <th>Department</th>
+                            <th>Admission Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentSubmissions">
+                        <tr>
+                            <td colspan="7" class="no-data">No recent submissions</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .form-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #0078d7;
+            padding-bottom: 10px;
+        }
+        
+        .validation-msg {
+            display: block;
+            font-size: 12px;
+            margin-top: 5px;
+            min-height: 16px;
+        }
+        
+        .validation-msg.success {
+            color: #28a745;
+        }
+        
+        .validation-msg.error {
+            color: #dc3545;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+        }
+    </style>
+    
+    <script>
+        // Update datetime
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Real-time field validation
+        document.querySelectorAll('.form-control').forEach(field => {
+            field.addEventListener('blur', function() {
+                validateField(this);
+            });
+        });
+        
+        function validateField(field) {
+            const validationSpan = document.getElementById(field.id + '-validation');
+            if (!validationSpan) return;
+            
+            let isValid = true;
+            let message = '';
+            
+            if (field.required && !field.value.trim()) {
+                isValid = false;
+                message = 'This field is required';
+            } else if (field.type === 'number') {
+                const value = parseInt(field.value);
+                if (field.id === 'age') {
+                    if (value < 0 || value > 120) {
+                        isValid = false;
+                        message = 'Age must be between 0 and 120';
+                    } else {
+                        message = '✓ Valid age';
+                    }
+                }
+            } else if (field.id === 'name') {
+                if (field.value.length < 2) {
+                    isValid = false;
+                    message = 'Name must be at least 2 characters';
+                } else {
+                    message = '✓ Valid name';
+                }
+            } else if (field.value) {
+                message = '✓ Valid';
+            }
+            
+            validationSpan.textContent = message;
+            validationSpan.className = 'validation-msg ' + (isValid ? 'success' : 'error');
+            
+            return isValid;
+        }
+        
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = document.querySelectorAll('.form-control[required]');
+            
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+            
+            const summary = document.getElementById('validation-summary');
+            if (isValid) {
+                summary.className = 'alert alert-success';
+                summary.textContent = '✓ Form validation passed! You can submit the form.';
+                summary.style.display = 'block';
+            } else {
+                summary.className = 'alert alert-danger';
+                summary.textContent = '⚠ Please fix the errors above before submitting.';
+                summary.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                summary.style.display = 'none';
+            }, 5000);
+            
+            return isValid;
+        }
+        
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            if (!validateForm()) {
+                return false;
+            }
+            
+            // Get form data
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            // Submit to API
+            fetch('/api/validate-patient', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('✓ Patient data submitted successfully!\n\n' + 
+                          'Patient ID: ' + result.patient_id);
+                    event.target.reset();
+                    window.location.href = "{{ url_for('home') }}";
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to submit patient data');
+            });
+            
+            return false;
+        }
+    </script>
+</body>
+</html>

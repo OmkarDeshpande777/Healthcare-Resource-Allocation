@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Resource Management System - Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="logo">
+        <h2>🏥 HRMS</h2>
+        <p>Hospital Resource Management</p>
+      </div>
+      
+      <div class="user-info">
+        <div class="user-avatar">{{ user[0].upper() if user else 'U' }}</div>
+        <div class="user-details">
+          <strong>{{ user }}</strong>
+          <span>{{ role }}</span>
+        </div>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="active"><a href="/">📊 Dashboard</a></li>
+        <li><a href="/data-entry">📝 Patient Entry</a></li>
+        <li><a href="/resource-tracker">📦 Resources</a></li>
+        <li><a href="/demand-forecast">🔮 Forecasting</a></li>
+        <li><a href="/priority-allocation">⚡ Allocation</a></li>
+        <li><a href="/alerts">🔔 Alerts ({{ overview.critical_alerts }})</a></li>
+        <li><a href="/procurement">🛒 Procurement</a></li>
+        <li><a href="/medical-predictor">🔬 Medical Predictor</a></li>
+        <li><a href="/logout">🚪 Logout</a></li>
+      </ul>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-bar">
+        <h1>Hospital Dashboard Overview</h1>
+        <div class="header-actions">
+          <span class="datetime">{{ overview.recent_admissions }}</span>
+          <button class="btn-refresh" onclick="refreshData()">🔄 Refresh</button>
+        </div>
+      </header>
+      
+      <!-- Key Metrics Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card blue">
+          <div class="metric-icon">🏥</div>
+          <div class="metric-content">
+            <h3>{{ overview.total_patients }}</h3>
+            <p>Total Patients</p>
+            <span class="metric-change">+{{ overview.recent_admissions }} today</span>
+          </div>
+        </div>
+        
+        <div class="metric-card green">
+          <div class="metric-icon">🛏️</div>
+          <div class="metric-content">
+            <h3>{{ overview.available_beds }}</h3>
+            <p>Available Beds</p>
+            <span class="metric-change">Across all departments</span>
+          </div>
+        </div>
+        
+        <div class="metric-card {% if overview.critical_alerts > 0 %}red{% else %}gray{% endif %}">
+          <div class="metric-icon">⚠️</div>
+          <div class="metric-content">
+            <h3>{{ overview.critical_alerts }}</h3>
+            <p>Critical Alerts</p>
+            <span class="metric-change">Requires attention</span>
+          </div>
+        </div>
+        
+        <div class="metric-card purple">
+          <div class="metric-icon">👨‍⚕️</div>
+          <div class="metric-content">
+            <h3>{{ overview.staff_on_duty }}</h3>
+            <p>Staff On Duty</p>
+            <span class="metric-change">Medical personnel</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resource Status Overview -->
+      <div class="section">
+        <h2>Resource Status</h2>
+        <div class="resource-status-grid">
+          <div class="status-item status-optimal">
+            <div class="status-icon">✅</div>
+            <div class="status-info">
+              <strong>{{ overview.resource_status.optimal }}</strong>
+              <span>Optimal Resources</span>
+            </div>
+          </div>
+          
+          <div class="status-item status-warning">
+            <div class="status-icon">⚠️</div>
+            <div class="status-info">
+              <strong>{{ overview.resource_status.warning }}</strong>
+              <span>Warning Level</span>
+            </div>
+          </div>
+          
+          <div class="status-item status-critical">
+            <div class="status-icon">🚨</div>
+            <div class="status-info">
+              <strong>{{ overview.resource_status.critical }}</strong>
+              <span>Critical Level</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Department Overview -->
+      <div class="section">
+        <h2>Department Capacity</h2>
+        <div class="department-grid">
+          {% for dept_name, dept_data in departments.items() %}
+          <div class="department-card">
+            <h3>{{ dept_name }}</h3>
+            <div class="capacity-bar">
+              {% set occupancy = (dept_data.occupied / dept_data.beds * 100)|round %}
+              <div class="capacity-fill" style="width: {{ occupancy }}%; 
+                   background-color: {% if occupancy > 90 %}#dc3545{% elif occupancy > 75 %}#ffc107{% else %}#28a745{% endif %};">
+              </div>
+            </div>
+            <div class="capacity-text">
+              <span>{{ dept_data.occupied }} / {{ dept_data.beds }} beds</span>
+              <strong>{{ occupancy }}%</strong>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- Recent Alerts -->
+      <div class="section">
+        <h2>Recent Alerts <a href="/alerts" class="btn-link">View All →</a></h2>
+        {% if alerts %}
+        <div class="alerts-list">
+          {% for alert in alerts[:5] %}
+          <div class="alert-item alert-{{ alert.severity }}">
+            <div class="alert-icon">
+              {% if alert.severity == 'critical' %}🚨
+              {% elif alert.severity == 'warning' %}⚠️
+              {% else %}ℹ️{% endif %}
+            </div>
+            <div class="alert-content">
+              <p>{{ alert.message }}</p>
+              <span class="alert-time">{{ alert.timestamp }}</span>
+            </div>
+            {% if not alert.acknowledged %}
+            <button class="btn-ack">Acknowledge</button>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-data">No recent alerts. All systems optimal.</p>
+        {% endif %}
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="section">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+          <a href="/data-entry" class="action-btn">
+            <div class="action-icon">➕</div>
+            <div class="action-text">
+              <strong>Add Patient</strong>
+              <span>Register new patient</span>
+            </div>
+          </a>
+          
+          <a href="/resource-tracker" class="action-btn">
+            <div class="action-icon">📦</div>
+            <div class="action-text">
+              <strong>Check Resources</strong>
+              <span>View live inventory</span>
+            </div>
+          </a>
+          
+          <a href="/demand-forecast" class="action-btn">
+            <div class="action-icon">🔮</div>
+            <div class="action-text">
+              <strong>View Forecast</strong>
+              <span>Predicted demand</span>
+            </div>
+          </a>
+          
+          <a href="/reports" class="action-btn">
+            <div class="action-icon">📊</div>
+            <div class="action-text">
+              <strong>Generate Report</strong>
+              <span>Daily/Weekly/Monthly</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    function refreshData() {
+      fetch('/api/dashboard-data')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Dashboard refreshed', data);
+          location.reload();
+        });
+    }
+    
+    // Auto-refresh every 30 seconds
+    setInterval(refreshData, 30000);
+  </script>
+</body>
+</html>

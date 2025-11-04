@@ -1,0 +1,32 @@
+{
+  "ICU": {
+    "beds": 50,
+    "occupied": 20,
+    "patients": []
+  },
+  "Emergency": {
+    "beds": 30,
+    "occupied": 15,
+    "patients": []
+  },
+  "General Ward": {
+    "beds": 200,
+    "occupied": 80,
+    "patients": []
+  },
+  "Pediatrics": {
+    "beds": 50,
+    "occupied": 20,
+    "patients": []
+  },
+  "Maternity": {
+    "beds": 40,
+    "occupied": 15,
+    "patients": []
+  },
+  "Ayurveda": {
+    "beds": 20,
+    "occupied": 8,
+    "patients": []
+  }
+}

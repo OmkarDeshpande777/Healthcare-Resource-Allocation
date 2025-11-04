@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Allocation - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo"><h2>🏥 Hospital RMS</h2><p>Resource Management System</p></div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+                <div class="user-details"><strong>{{ session.username|default('User') }}</strong><span>{{ session.role|default('Staff') }}</span></div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li class="active"><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Priority Allocation System</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                    <button class="btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card blue">
+                    <div class="metric-icon">⏳</div>
+                    <div class="metric-content"><h3>{{ waiting_count }}</h3><p>Waiting Patients</p><span class="metric-change">In queue</span></div>
+                </div>
+                <div class="metric-card green">
+                    <div class="metric-icon">✅</div>
+                    <div class="metric-content"><h3>{{ allocated_today }}</h3><p>Allocated Today</p><span class="metric-change">Successful</span></div>
+                </div>
+                <div class="metric-card gray">
+                    <div class="metric-icon">⏱️</div>
+                    <div class="metric-content"><h3>{{ "%.1f"|format(avg_wait_time) }}min</h3><p>Avg Wait Time</p><span class="metric-change">Current</span></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Waiting Patient Queue</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Patient Name</th>
+                            <th>Condition</th>
+                            <th>Department</th>
+                            <th>Wait Time</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in waiting_queue %}
+                        <tr>
+                            <td><span class="badge badge-{{ 'danger' if patient.priority == 1 else 'warning' if patient.priority == 2 else 'info' }}">P{{ patient.priority }}</span></td>
+                            <td>{{ patient.name }}</td>
+                            <td>{{ patient.condition }}</td>
+                            <td>{{ patient.department }}</td>
+                            <td>{{ patient.wait_time }}</td>
+                            <td><span class="badge badge-warning">Waiting</span></td>
+                            <td><button class="btn-ack" onclick="allocatePatient('{{ patient.id }}')">Allocate</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not waiting_queue %}
+                <div class="no-data">No patients waiting</div>
+                {% endif %}
+            </div>
+            
+            <div class="section">
+                <h2>📋 Allocation History (Today)</h2>
+                <table class="table">
+                    <thead><tr><th>Time</th><th>Patient</th><th>Department</th><th>Resource</th><th>Allocated By</th></tr></thead>
+                    <tbody>
+                        {% for item in allocation_history %}
+                        <tr><td>{{ item.time }}</td><td>{{ item.patient }}</td><td>{{ item.department }}</td><td>{{ item.resource }}</td><td>{{ item.staff }}</td></tr>
+                        {% else %}
+                        <tr><td colspan="5" class="no-data">No allocations today</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        function allocatePatient(patientId) {
+            if (confirm('Allocate resources for this patient?')) {
+                alert('Patient allocated successfully');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

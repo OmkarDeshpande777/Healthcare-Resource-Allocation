@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo"><h2>🏥 Hospital RMS</h2><p>Resource Management System</p></div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+                <div class="user-details"><strong>{{ session.username|default('User') }}</strong><span>{{ session.role|default('Staff') }}</span></div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li class="active"><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Procurement Recommendations</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                    <button class="btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card red">
+                    <div class="metric-icon">🚨</div>
+                    <div class="metric-content"><h3>{{ critical_orders }}</h3><p>Critical Orders</p><span class="metric-change">Immediate action</span></div>
+                </div>
+                <div class="metric-card gray">
+                    <div class="metric-icon">⏱️</div>
+                    <div class="metric-content"><h3>{{ pending_orders }}</h3><p>Pending Orders</p><span class="metric-change">In transit</span></div>
+                </div>
+                <div class="metric-card green">
+                    <div class="metric-icon">✅</div>
+                    <div class="metric-content"><h3>{{ completed_orders }}</h3><p>Delivered</p><span class="metric-change">This month</span></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Recommended Orders</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Resource</th>
+                            <th>Current Stock</th>
+                            <th>Recommended Qty</th>
+                            <th>Unit Cost</th>
+                            <th>Total Cost</th>
+                            <th>Lead Time</th>
+                            <th>Urgency</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recommendations %}
+                        <tr>
+                            <td><strong>{{ order.resource }}</strong></td>
+                            <td>{{ order.current_stock|indian_number }}</td>
+                            <td>{{ order.recommended_qty|indian_number }}</td>
+                            <td>{{ order.unit_cost|indian_rupees }}</td>
+                            <td><strong>{{ order.total_cost|indian_rupees }}</strong></td>
+                            <td>{{ order.lead_time }} days</td>
+                            <td><span class="badge badge-{{ 'danger' if order.urgency == 'Critical' else 'warning' if order.urgency == 'High' else 'info' }}">{{ order.urgency }}</span></td>
+                            <td><button class="btn-ack" onclick="placeOrder('{{ order.resource }}')">Order</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Recent Orders</h2>
+                <table class="table">
+                    <thead>
+                        <tr><th>Date</th><th>Resource</th><th>Quantity</th><th>Cost</th><th>Status</th><th>Expected Delivery</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_history %}
+                        <tr><td>{{ item.date }}</td><td>{{ item.resource }}</td><td>{{ item.qty|indian_number }}</td><td>{{ item.cost|indian_rupees }}</td><td><span class="badge badge-{{ 'success' if item.status == 'Delivered' else 'info' }}">{{ item.status }}</span></td><td>{{ item.delivery }}</td></tr>
+                        {% else %}
+                        <tr><td colspan="6" class="no-data">No order history</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        function placeOrder(resource) {
+            if (confirm(`Place order for ${resource}?`)) {
+                alert('Order placed successfully');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

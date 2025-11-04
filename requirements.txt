@@ -1,0 +1,25 @@
+# Flask and Web Framework
+Flask==2.3.0
+Werkzeug==2.3.0
+
+# Data Processing
+pandas==2.0.3
+numpy==1.24.3
+
+# Machine Learning (for demand forecasting)
+scikit-learn==1.3.0
+
+# Linear Programming for Resource Optimization
+PuLP==2.7.0
+
+# Production WSGI Server
+gunicorn==21.2.0
+
+# Environment Management
+python-dotenv==1.0.0
+
+# Date/Time Utilities
+python-dateutil==2.8.2
+
+# Additional utilities
+pytz==2023.3

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Prediction Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Prediction Result</h1>
+    
+    <div class="result-section">
+      <p><b>Predicted Medical Condition:</b> <span class="highlight">{{ prediction }}</span></p>
+      
+      {% if severity %}
+      <p><b>Severity Level:</b> <span class="severity-{{ severity.lower() }}">{{ severity }}</span></p>
+      {% endif %}
+      
+      {% if confidence %}
+      <p><b>Confidence:</b> {{ confidence }}%</p>
+      {% endif %}
+      
+      {% if priority %}
+      <p><b>Priority Level:</b> {{ priority }}</p>
+      {% endif %}
+      
+      <p><b>Recommended Resource Allocation:</b> {{ allocation }}</p>
+    </div>
+    
+    {% if resources %}
+    <div class="resources-section">
+      <h3>📦 Allocated Resources</h3>
+      <ul>
+        {% for resource, status in resources.items() %}
+        <li><b>{{ resource.replace('_', ' ').title() }}:</b> {{ status }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    
+    <div class="actions">
+      <a href="/">🔙 New Prediction</a>
+      <a href="/dashboard" class="btn-secondary">📊 View Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

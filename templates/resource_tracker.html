@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Tracker - Hospital Resource Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🏥 Hospital RMS</h2>
+                <p>Resource Management System</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+                <div class="user-details">
+                    <strong>{{ session.username|default('User') }}</strong>
+                    <span>{{ session.role|default('Staff') }}</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">🏠 Dashboard</a></li>
+                <li><a href="{{ url_for('data_entry') }}">📝 Data Entry</a></li>
+                <li class="active"><a href="{{ url_for('resource_tracker') }}">📊 Resource Tracker</a></li>
+                <li><a href="{{ url_for('demand_forecast') }}">📈 Demand Forecast</a></li>
+                <li><a href="{{ url_for('priority_allocation') }}">🎯 Priority Allocation</a></li>
+                <li><a href="{{ url_for('view_alerts') }}">🔔 Alerts</a></li>
+                <li><a href="{{ url_for('procurement') }}">🛒 Procurement</a></li>
+                <li><a href="{{ url_for('medical_predictor') }}">🔬 Medical Predictor</a></li>
+                <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Real-Time Resource Tracker</h1>
+                <div class="header-actions">
+                    <span class="datetime" id="datetime"></span>
+                    <button class="btn-refresh" onclick="refreshData()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <!-- Resource Summary Cards -->
+            <div class="metrics-grid">
+                {% for resource, data in resources.items() %}
+                <div class="metric-card {% if data.utilization >= 90 %}red{% elif data.utilization >= 75 %}gray{% else %}green{% endif %}">
+                    <div class="metric-icon">
+                        {% if 'bed' in resource.lower() %}🛏️
+                        {% elif 'oxygen' in resource.lower() %}💨
+                        {% elif 'ventilator' in resource.lower() %}🫁
+                        {% elif 'ppe' in resource.lower() %}🦺
+                        {% elif 'mask' in resource.lower() %}😷
+                        {% elif 'glove' in resource.lower() %}🧤
+                        {% elif 'sanitizer' in resource.lower() %}🧴
+                        {% else %}📦{% endif %}
+                    </div>
+                    <div class="metric-content">
+                        <h3>{{ data.available }}/{{ data.total }}</h3>
+                        <p>{{ resource.replace('_', ' ').title() }}</p>
+                        <span class="metric-change">{{ "%.1f"|format(data.utilization) }}% Utilized</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Utilization Chart -->
+            <div class="section">
+                <h2>Resource Utilization Overview</h2>
+                <canvas id="utilizationChart" height="80"></canvas>
+            </div>
+            
+            <!-- Detailed Resource Table -->
+            <div class="section">
+                <h2>Detailed Resource Inventory</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Resource</th>
+                            <th>Total</th>
+                            <th>Available</th>
+                            <th>Allocated</th>
+                            <th>Maintenance</th>
+                            <th>Utilization</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resource, data in resources.items() %}
+                        <tr>
+                            <td><strong>{{ resource.replace('_', ' ').title() }}</strong></td>
+                            <td>{{ data.total }}</td>
+                            <td>{{ data.available }}</td>
+                            <td>{{ data.allocated }}</td>
+                            <td>{{ data.maintenance }}</td>
+                            <td>
+                                <div class="capacity-bar">
+                                    <div class="capacity-fill" style="width: {{ data.utilization }}%; 
+                                         background-color: {% if data.utilization >= 90 %}#dc3545{% elif data.utilization >= 75 %}#ffc107{% else %}#28a745{% endif %};"></div>
+                                </div>
+                                <span>{{ "%.1f"|format(data.utilization) }}%</span>
+                            </td>
+                            <td>
+                                {% if data.utilization >= 90 %}
+                                    <span class="badge badge-danger">Critical</span>
+                                {% elif data.utilization >= 75 %}
+                                    <span class="badge badge-warning">Warning</span>
+                                {% else %}
+                                    <span class="badge badge-success">Optimal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn-ack" onclick="updateResource('{{ resource }}')">Update</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Department-wise Distribution -->
+            <div class="section">
+                <h2>Department-wise Resource Distribution</h2>
+                <div class="department-grid">
+                    {% for dept, data in departments.items() %}
+                    <div class="department-card">
+                        <h3>{{ dept }}</h3>
+                        <div style="margin-top: 15px;">
+                            <p><strong>Beds:</strong> {{ data.occupied }}/{{ data.capacity }}</p>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: {{ (data.occupied / data.capacity * 100) if data.capacity > 0 else 0 }}%; 
+                                     background-color: {% if (data.occupied / data.capacity * 100) >= 90 %}#dc3545{% elif (data.occupied / data.capacity * 100) >= 75 %}#ffc107{% else %}#28a745{% endif %};"></div>
+                            </div>
+                            <div class="capacity-text">
+                                <span>Occupancy:</span>
+                                <strong>{{ "%.1f"|format((data.occupied / data.capacity * 100) if data.capacity > 0 else 0) }}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Staff Availability -->
+            <div class="section">
+                <h2>Staff Availability</h2>
+                <div class="metrics-grid">
+                    {% for role, data in staff.items() %}
+                    <div class="status-item status-optimal">
+                        <div class="status-icon">
+                            {% if 'doctor' in role.lower() %}👨‍⚕️
+                            {% elif 'nurse' in role.lower() %}👩‍⚕️
+                            {% elif 'technician' in role.lower() %}👨‍🔬
+                            {% else %}👨‍💼{% endif %}
+                        </div>
+                        <div class="status-info">
+                            <strong>{{ data.on_duty }}</strong>
+                            <span>{{ role.replace('_', ' ').title() }} on Duty</span>
+                            <small style="font-size: 11px; color: #6c757d;">
+                                {{ data.off_duty }} off-duty
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update datetime
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('datetime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Utilization Chart with real-time data
+        let utilizationChart;
+        
+        async function loadResourceData() {
+            try {
+                const response = await fetch('/api/resource-utilization');
+                const resources = await response.json();
+                
+                const resourceNames = Object.keys(resources).map(r => 
+                    r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                );
+                const utilizationData = Object.values(resources).map(r => r.utilization);
+                const availableData = Object.values(resources).map(r => r.available);
+                const allocatedData = Object.values(resources).map(r => r.allocated);
+                const totalData = Object.values(resources).map(r => r.total);
+                
+                // Color code by status
+                const backgroundColors = Object.values(resources).map(r => {
+                    if (r.status === 'critical') return '#dc3545';
+                    if (r.status === 'high') return '#ffc107';
+                    if (r.status === 'moderate') return '#0078d7';
+                    return '#28a745';
+                });
+                
+                const ctx = document.getElementById('utilizationChart').getContext('2d');
+                
+                if (utilizationChart) {
+                    utilizationChart.destroy();
+                }
+                
+                utilizationChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: resourceNames,
+                        datasets: [
+                            {
+                                label: 'Available',
+                                data: availableData,
+                                backgroundColor: '#28a745',
+                                borderColor: '#28a745',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Allocated',
+                                data: allocatedData,
+                                backgroundColor: backgroundColors,
+                                borderColor: backgroundColors,
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Resource Count'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Real-Time Resource Status (Color: 🟢 Optimal, 🔵 Moderate, 🟡 High, 🔴 Critical)'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        const index = context.dataIndex;
+                                        const utilization = utilizationData[index];
+                                        const total = totalData[index];
+                                        return [`Utilization: ${utilization.toFixed(1)}%`, `Total: ${total}`];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading resource data:', error);
+                loadStaticChart();
+            }
+        }
+        
+        function loadStaticChart() {
+            // Fallback to static data
+            const ctx = document.getElementById('utilizationChart').getContext('2d');
+            const resources = {{ resources|tojson }};
+            
+            const resourceNames = Object.keys(resources).map(r => r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            const availableData = Object.values(resources).map(r => r.available);
+            const allocatedData = Object.values(resources).map(r => r.allocated);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: resourceNames,
+                    datasets: [
+                        {
+                            label: 'Available',
+                            data: availableData,
+                            backgroundColor: '#28a745'
+                        },
+                        {
+                            label: 'Allocated',
+                            data: allocatedData,
+                            backgroundColor: '#0078d7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function refreshData() {
+            await loadResourceData();
+            
+            // Also refresh the page metrics
+            try {
+                const dashResponse = await fetch('/api/dashboard-data');
+                const dashData = await dashResponse.json();
+                console.log('Dashboard data refreshed:', dashData);
+            } catch (error) {
+                console.error('Error refreshing dashboard:', error);
+            }
+        }
+        
+        function updateResource(resourceName) {
+            const newValue = prompt(`Enter new total for ${resourceName.replace(/_/g, ' ')}:`);
+            if (newValue && !isNaN(newValue)) {
+                // Send API request to update the resource
+                fetch('/api/update-resource', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        resource_name: resourceName,
+                        updates: { total: parseInt(newValue) }
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✓ Resource ${resourceName} updated successfully!`);
+                        refreshData();
+                    } else {
+                        alert(`✗ Error: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`✗ Error updating resource: ${error.message}`);
+                });
+            }
+        }
+        
+        // Load data on page load
+        loadResourceData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>
